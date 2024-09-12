@@ -1,12 +1,15 @@
-import { XMLBuilder, XMLParser } from "fast-xml-parser";
-import JSZip from "jszip";
 import Bun from "bun";
-
 import Sheet from "./sheet";
+
+import { XMLBuilder, XMLParser } from "fast-xml-parser";
+import { Unzipped, unzipSync, zipSync } from "fflate";
 
 type LoadOptions = {
   excludeSheetIndexes?: number[];
 }
+
+const decoder = new TextDecoder();
+const encoder = new TextEncoder();
 
 /**
  * TinyExcel class
@@ -21,7 +24,7 @@ class TinyExcel {
   /**
    * Loaded file
    */
-  private _file: JSZip;
+  private _file: Unzipped;
 
   /**
    * Copy of the data
@@ -62,15 +65,12 @@ class TinyExcel {
         }
 
         // Get buffer file
-        const data = await file.arrayBuffer();
-        // Create JSZip instance
-        const instance = new JSZip();
-
+        const data = new Uint8Array(await file.arrayBuffer());
         // Load zip data
-        this._file = await instance.loadAsync(data);
+        this._file = unzipSync(data);
 
         // Load all sheets
-        const sheet_keys = Object.keys(this._file.files).filter((key) => key.startsWith("xl/worksheets/sheet"));
+        const sheet_keys = Object.keys(this._file).filter((key) => key.startsWith("xl/worksheets/sheet"));
 
         // Parse sheet XML data
         const xml = new XMLParser({
@@ -79,7 +79,7 @@ class TinyExcel {
         });
 
         // Get shared strings XML file
-        const sharedStrings = this._file.file("xl/sharedStrings.xml");
+        const sharedStrings = this._file["xl/sharedStrings.xml"];
 
         // If shared strings is not found
         if (!sharedStrings) {
@@ -94,7 +94,7 @@ class TinyExcel {
           }
 
           // Get sheet
-          const sheetFile = this._file.file(sheet_keys[i]);
+          const sheetFile = this._file[sheet_keys[i]];
 
           // If sheet is not found
           if (!sheetFile) {
@@ -102,7 +102,7 @@ class TinyExcel {
           }
 
           // Load sheet
-          const data = await sheetFile.async("string");
+          const data = decoder.decode(sheetFile);
 
           // Parse sheet XML data
           const parsed = xml.parse(data);
@@ -112,7 +112,7 @@ class TinyExcel {
         }
 
         // Parse shared strings XML data
-        this._sharedStrings = xml.parse(await sharedStrings.async("string"));
+        this._sharedStrings = xml.parse(decoder.decode(sharedStrings));
         
         // Resolve
         resolve();
@@ -127,24 +127,14 @@ class TinyExcel {
   /**
    * Get sheet by index
    */
-  getSheet(index: number): Promise<Sheet> {
-    return new Promise(async (resolve, reject) => {
-      try {
-        // Check if sheet exists
-        if (!this._sheets.has(index)) {
-          throw new Error(`Sheet with index ${index} not found.`);
-        }
+  getSheet(index: number): Sheet {
+    // Check if sheet exists
+    if (!this._sheets.has(index)) {
+      throw new Error(`Sheet with index ${index} not found.`);
+    }
 
-        // Create new sheet instance
-        const sheet = new Sheet(index, this._sheets.get(index)!, this._sharedStrings);
-        // Resolve
-        resolve(sheet);
-      }
-
-      catch (e) {
-        reject(e);
-      }
-    });
+    // Create new sheet instance
+    return new Sheet(index, this._sheets.get(index)!, this._sharedStrings);
   }
 
   /**
@@ -187,17 +177,17 @@ class TinyExcel {
           // Convert data to XML
           const dataXML = builder.build(sheet);
           // Save data to zip
-          this._file.file(`xl/worksheets/sheet${index + 1}.xml`, dataXML);
+          this._file[`xl/worksheets/sheet${index + 1}.xml`] = encoder.encode(dataXML);
         }
 
         // Convert string table to XML
         const stringTableXML = builder.build(this._sharedStrings);
         // Save string table to zip
-        this._file.file("xl/sharedStrings.xml", stringTableXML);
+        this._file["xl/sharedStrings.xml"] = encoder.encode(stringTableXML);
 
         // Generate buffer
-        const buffer = await this._file.generateAsync({ compression: "DEFLATE", type: "nodebuffer" });
-
+        const buffer =  zipSync(this._file);
+        // Resolve buffer
         return resolve(Buffer.from(buffer));
       }
 

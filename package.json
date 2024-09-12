@@ -23,7 +23,7 @@
   "keywords": ["excel", "tiny", "spreadsheet", "xlsx", "xml"],
   "dependencies": {
     "fast-xml-parser": "^4.5.0",
-    "jszip": "^3.10.1"
+    "fflate": "^0.8.2"
   },
   "devDependencies": {
     "bun-types": "^1.1.27"
