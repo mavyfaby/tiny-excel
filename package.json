@@ -1,0 +1,31 @@
+{
+  "name": "tiny-excel",
+  "description": "A promise-based, fast and simple .xlsx file editor using Bun APIs",
+  "type": "module",
+  "main": "lib/index.ts",
+  "version": "1.0.0",
+  "scripts": {
+    "test": "bun test"
+  },
+  "author": {
+    "name": "Maverick Fabroa",
+    "email": "me@mavyfaby.me",
+    "url": "https://mavyfaby.me"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/mavyfaby/tiny-excel"
+  },
+  "license": "MIT",
+  "engines": {
+    "bun": "^1.1.27"
+  },
+  "keywords": ["excel", "tiny", "spreadsheet", "xlsx", "xml"],
+  "dependencies": {
+    "fast-xml-parser": "^4.5.0",
+    "jszip": "^3.10.1"
+  },
+  "devDependencies": {
+    "bun-types": "^1.1.27"
+  }
+}
