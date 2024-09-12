@@ -26,6 +26,11 @@ class Sheet extends EventEmitter {
    * @param cell ex. A1, B2, C3, D4, etc.
    */
   getCell(cell_name: string): string | null {
+    // Check if cell name is valid
+    if (!cell_name.match(/^[A-Z]+\d+$/)) {
+      throw new Error("Invalid cell name");
+    }
+    
     // Get worksheet
     const worksheet = this._data['worksheet'];
     // Get sheet data rows
@@ -57,6 +62,11 @@ class Sheet extends EventEmitter {
    * @param type Type of value (string or formula)
    */
   setCell(cell_name: string, value: string | number, type: "string" | "formula" = "string"): void {
+    // Check if cell name is valid
+    if (!cell_name.match(/^[A-Z]+\d+$/)) {
+      throw new Error("Invalid cell name");
+    }
+
     // Get worksheet
     const worksheet = this._data['worksheet'];
     // Get sheet data rows
