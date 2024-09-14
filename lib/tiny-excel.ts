@@ -64,10 +64,8 @@ class TinyExcel {
           return reject(`File ${this._path} is not an Excel file.`);
         }
 
-        // Get buffer file
-        const data = new Uint8Array(await file.arrayBuffer());
         // Load zip data
-        this._file = unzipSync(data);
+        this._file = unzipSync(await file.bytes());
 
         // Load all sheets
         const sheet_keys = Object.keys(this._file).filter((key) => key.startsWith("xl/worksheets/sheet"));
