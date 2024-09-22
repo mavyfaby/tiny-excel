@@ -1,10 +1,12 @@
-import Bun from "bun";
 import Sheet from "./sheet";
 
 import { XMLBuilder, XMLParser } from "fast-xml-parser";
 import { Unzipped, unzipSync, zipSync } from "fflate";
 
 type LoadOptions = {
+  /**
+   * Exclude loading of sheets by index
+   */
   excludeSheetIndexes?: number[];
 }
 
@@ -137,16 +139,15 @@ class TinyExcel {
 
   /**
    * Save the sheet
+   * @param name  Name of the file
    */
-  async save(): Promise<File> {
+  async save(name?: string): Promise<File> {
     return new Promise(async (resolve, reject) => {
       try {
+        // Save buffer
         const buffer = await this.saveBuffer();
-
         // Save buffer to file
-        const file = new File([buffer], "adasdasdasd.xlsx");
-
-        console.log(file);
+        const file = new File([buffer], name || "file.xlsx");
 
         // Resolve
         resolve(file);
